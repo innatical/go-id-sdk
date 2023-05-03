@@ -1,15 +1,15 @@
 package main
 
 import (
-	idSDK "github.com/innatical/id-sdk"
+	"github.com/innatical/id-sdk"
 	"net/http"
 	"os"
 )
 
 func main() {
-	client := idSDK.New(os.Getenv("CLIENT_ID"), os.Getenv("CLIENT_SECRET"), "http://localhost:8080/callback")
+	idSDK.New(os.Getenv("CLIENT_ID"), os.Getenv("CLIENT_SECRET"), "http://localhost:8080/callback")
 
-	//user, err := client.GetCurrentUser("")
+	//user, err := idSDK.GetCurrentUser("")
 	//if err != nil {
 	//	println(err.Error())
 	//	return
@@ -17,10 +17,13 @@ func main() {
 	//
 	//println(user.Username)
 
+	idSDK.Client.SetIDURL("http://localhost:4020")
+	idSDK.Client.SetIDServerURL("http://localhost:6969")
+
 	http.HandleFunc("/callback", func(w http.ResponseWriter, r *http.Request) {
 		code := r.URL.Query().Get("code")
 
-		token, err := client.GetToken(code)
+		token, err := idSDK.GetToken(code)
 
 		if err != nil {
 			println(err.Error())
@@ -33,7 +36,7 @@ func main() {
 	})
 
 	http.HandleFunc("/authorize", func(w http.ResponseWriter, r *http.Request) {
-		url := client.CreateURL("identity team", "state")
+		url := idSDK.CreateURL("identity team", "state")
 
 		http.Redirect(w, r, url, http.StatusTemporaryRedirect)
 	})

@@ -18,8 +18,10 @@ type InnaticalID struct {
 	_idServerURL string
 }
 
-func New(clientID, clientSecret, redirectURL string) *InnaticalID {
-	return &InnaticalID{
+var Client *InnaticalID
+
+func New(clientID, clientSecret, redirectURL string) {
+	Client = &InnaticalID{
 		clientID:     clientID,
 		clientSecret: clientSecret,
 		redirectURL:  redirectURL,
@@ -36,12 +38,12 @@ func (i *InnaticalID) SetIDServerURL(idServerURL string) {
 	i._idServerURL = idServerURL
 }
 
-func (i *InnaticalID) CreateURL(scope string, state string) string {
+func CreateURL(scope string, state string) string {
 	return fmt.Sprintf(
 		"%s/authorize?client_id=%s&redirect_uri=%s&response_type=code&scope=%s&state=%s&prompt=consent",
-		i._idURL,
-		i.clientID,
-		url.QueryEscape(i.redirectURL),
+		Client._idURL,
+		Client.clientID,
+		url.QueryEscape(Client.redirectURL),
 		scope,
 		state,
 	)
@@ -63,27 +65,31 @@ type TokenResponse struct {
 	UserID       string `json:"user_id"`
 }
 
-func (i *InnaticalID) GetToken(code string) (TokenResponse, error) {
+func GetToken(code string) (*TokenResponse, error) {
+	if Client == nil {
+		return nil, fmt.Errorf("client is not initialized")
+	}
+
 	data := tokenRequest{
 		Code:         code,
-		ClientID:     i.clientID,
-		ClientSecret: i.clientSecret,
-		RedirectURI:  i.redirectURL,
+		ClientID:     Client.clientID,
+		ClientSecret: Client.clientSecret,
+		RedirectURI:  Client.redirectURL,
 		GrantType:    "authorization_code",
 	}
 
 	postBody, err := json.Marshal(data)
 
 	if err != nil {
-		return TokenResponse{}, err
+		return nil, err
 	}
 
 	responseBody := bytes.NewBuffer(postBody)
 
-	resp, err := http.Post(fmt.Sprintf("%s/oauth2/token", i._idServerURL), "application/json", responseBody)
+	resp, err := http.Post(fmt.Sprintf("%s/oauth2/token", Client._idServerURL), "application/json", responseBody)
 
 	if err != nil {
-		return TokenResponse{}, err
+		return nil, err
 	}
 
 	defer resp.Body.Close()
@@ -91,16 +97,16 @@ func (i *InnaticalID) GetToken(code string) (TokenResponse, error) {
 	body, err := io.ReadAll(resp.Body)
 
 	if err != nil {
-		return TokenResponse{}, err
+		return nil, err
 	}
 
 	var tokenResponse TokenResponse
 
 	if err := json.Unmarshal(body, &tokenResponse); err != nil {
-		return TokenResponse{}, err
+		return nil, err
 	}
 
-	return tokenResponse, nil
+	return &tokenResponse, nil
 }
 
 type User struct {
@@ -111,9 +117,12 @@ type User struct {
 	Flags    []string `json:"flags"`
 }
 
-func (i *InnaticalID) GetCurrentUser(token string) (*User, error) {
+func GetCurrentUser(token string) (*User, error) {
+	if Client == nil {
+		return nil, fmt.Errorf("client is not initialized")
+	}
 
-	url := fmt.Sprintf("%s/users/@me", i._idServerURL)
+	url := fmt.Sprintf("%s/users/@me", Client._idServerURL)
 	preparedToken := fmt.Sprintf("Bearer %s", token)
 
 	req, err := http.NewRequest("GET", url, nil)
