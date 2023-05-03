@@ -25,11 +25,11 @@ import (
 
 func main() {
 	// Initialize InnaticalID
-	client := idSDK.New("client_id", "client_secret", "redirect_uri")
+	idSDK.New("client_id", "client_secret", "redirect_uri")
 
 	// Listen for authorize flow, return generate oauth2 url
     http.HandleFunc("/authorize", func(w http.ResponseWriter, r *http.Request) {
-		url := client.CreateURL("identity team", "state")
+		url := idSDK.CreateURL("identity team", "state")
 
 		http.Redirect(w, r, url, http.StatusTemporaryRedirect)
 	})
@@ -38,7 +38,7 @@ func main() {
 	http.HandleFunc("/callback", func(w http.ResponseWriter, r *http.Request) {
 		code := r.URL.Query().Get("code")
 
-		token, err := client.GetToken(code)
+		token, err := idSDK.GetToken(code)
 
 		if err != nil {
 			w.Write([]byte(err.Error()))
