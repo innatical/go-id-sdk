@@ -122,10 +122,10 @@ func GetCurrentUser(token string) (*User, error) {
 		return nil, fmt.Errorf("client is not initialized")
 	}
 
-	url := fmt.Sprintf("%s/users/@me", Client._idServerURL)
+	serverURL := fmt.Sprintf("%s/users/@me", Client._idServerURL)
 	preparedToken := fmt.Sprintf("Bearer %s", token)
 
-	req, err := http.NewRequest("GET", url, nil)
+	req, err := http.NewRequest("GET", serverURL, nil)
 
 	if err != nil {
 		fmt.Println("Error creating request : ", err)
@@ -157,4 +157,53 @@ func GetCurrentUser(token string) (*User, error) {
 	}
 
 	return &user, nil
+}
+
+type Team struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+}
+
+func GetCurrentUserTeams(token string) (*[]Team, error) {
+	if Client == nil {
+		return nil, fmt.Errorf("client is not initialized")
+	}
+
+	serverURL := fmt.Sprintf("%s/users/@me/teams", Client._idServerURL)
+
+	preparedToken := fmt.Sprintf("Bearer %s", token)
+
+	req, err := http.NewRequest("GET", serverURL, nil)
+
+	if err != nil {
+		fmt.Println("Error creating request : ", err)
+		return nil, err
+	}
+
+	req.Header.Add("Authorization", preparedToken)
+
+	res, err := http.DefaultClient.Do(req)
+
+	if err != nil {
+		fmt.Printf("Error making request: %v\n", err)
+		return nil, err
+	}
+
+	defer res.Body.Close()
+
+	body, err := io.ReadAll(res.Body)
+
+	if err != nil {
+		fmt.Println("Failure : ", err)
+		return nil, err
+	}
+
+	var teams []Team
+
+	if err := json.Unmarshal(body, &teams); err != nil {
+		fmt.Println("Failure : ", err)
+		return nil, err
+	}
+
+	return &teams, nil
 }
