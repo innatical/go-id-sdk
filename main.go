@@ -159,6 +159,49 @@ func GetCurrentUser(token string) (*User, error) {
 	return &user, nil
 }
 
+func GetUser(token string, id string) (*User, error) {
+	if Client == nil {
+		return nil, fmt.Errorf("client is not initialized")
+	}
+
+	serverURL := fmt.Sprintf("%s/users/%s", Client._idServerURL, id)
+	preparedToken := fmt.Sprintf("Bearer %s", token)
+
+	req, err := http.NewRequest("GET", serverURL, nil)
+
+	if err != nil {
+		fmt.Println("Error creating request : ", err)
+		return nil, err
+	}
+
+	req.Header.Add("Authorization", preparedToken)
+
+	res, err := http.DefaultClient.Do(req)
+
+	if err != nil {
+		fmt.Printf("Error making request: %v\n", err)
+		return nil, err
+	}
+
+	defer res.Body.Close()
+
+	body, err := io.ReadAll(res.Body)
+
+	if err != nil {
+		fmt.Println("Failure : ", err)
+		return nil, err
+	}
+
+	var user User
+
+	if err := json.Unmarshal(body, &user); err != nil {
+		fmt.Println("Failure : ", err)
+		return nil, err
+	}
+
+	return &user, nil
+}
+
 type Team struct {
 	ID   string `json:"id"`
 	Name string `json:"name"`

@@ -9,14 +9,6 @@ import (
 func main() {
 	idSDK.New(os.Getenv("CLIENT_ID"), os.Getenv("CLIENT_SECRET"), "http://localhost:8080/callback")
 
-	//user, err := idSDK.GetCurrentUser("")
-	//if err != nil {
-	//	println(err.Error())
-	//	return
-	//}
-	//
-	//println(user.Username)
-
 	idSDK.Client.SetIDURL("http://localhost:4020")
 	idSDK.Client.SetIDServerURL("http://localhost:6969")
 
