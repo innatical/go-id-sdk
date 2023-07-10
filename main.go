@@ -110,11 +110,13 @@ func GetToken(code string) (*TokenResponse, error) {
 }
 
 type User struct {
-	ID       string   `json:"id"`
-	Username string   `json:"username"`
-	Email    string   `json:"email"`
-	Verified bool     `json:"verified"`
-	Flags    []string `json:"flags"`
+	ID            string   `json:"id"`
+	Username      string   `json:"username"`
+	Discriminator string   `json:"discriminator"`
+	Avatar        string   `json:"avatar"`
+	Email         string   `json:"email"`
+	Verified      bool     `json:"verified"`
+	Flags         []string `json:"flags"`
 }
 
 func GetCurrentUser(token string) (*User, error) {
