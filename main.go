@@ -38,12 +38,19 @@ func (i *InnaticalID) SetIDServerURL(idServerURL string) {
 	i._idServerURL = idServerURL
 }
 
-func CreateURL(scope string, state string) string {
+func CreateURL(scope string, state string, redirectURL *string) string {
+	var finalRedirectURL string
+	if redirectURL != nil {
+		finalRedirectURL = url.QueryEscape(*redirectURL)
+	} else {
+		finalRedirectURL = url.QueryEscape(Client.redirectURL)
+	}
+
 	return fmt.Sprintf(
 		"%s/authorize?client_id=%s&redirect_uri=%s&response_type=code&scope=%s&state=%s&prompt=consent",
 		Client._idURL,
 		Client.clientID,
-		url.QueryEscape(Client.redirectURL),
+		finalRedirectURL,
 		scope,
 		state,
 	)
@@ -251,4 +258,48 @@ func GetCurrentUserTeams(token string) (*[]Team, error) {
 	}
 
 	return &teams, nil
+}
+
+func FindUser(token string, username string, discriminator string) (*User, error) {
+	if Client == nil {
+		return nil, fmt.Errorf("client is not initialized")
+	}
+
+	serverURL := fmt.Sprintf("%s/users/find?username=%s&discriminator=%s", Client._idServerURL, username, discriminator)
+
+	preparedToken := fmt.Sprintf("Bearer %s", token)
+
+	req, err := http.NewRequest("GET", serverURL, nil)
+
+	if err != nil {
+		fmt.Println("Error creating request : ", err)
+		return nil, err
+	}
+
+	req.Header.Add("Authorization", preparedToken)
+
+	res, err := http.DefaultClient.Do(req)
+
+	if err != nil {
+		fmt.Printf("Error making request: %v\n", err)
+		return nil, err
+	}
+
+	defer res.Body.Close()
+
+	body, err := io.ReadAll(res.Body)
+
+	if err != nil {
+		fmt.Println("Failure : ", err)
+		return nil, err
+	}
+
+	var user User
+
+	if err := json.Unmarshal(body, &user); err != nil {
+		fmt.Println("Failure : ", err)
+		return nil, err
+	}
+
+	return &user, nil
 }
