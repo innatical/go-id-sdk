@@ -7,7 +7,7 @@ InnaticalID is an authentication platform for Innatical, designed to provide a s
 To install InnaticalID in your Golang project, use the following command:
 
 ```
-go get github.com/innatical/id-sdk
+go get github.com/innatical/go-id-sdk
 ```
 
 ## Usage
@@ -20,7 +20,7 @@ package main
 import (
 	"fmt"
 	"net/http"
-	"github.com/innatical/id-sdk"
+	"github.com/innatical/go-id-sdk"
 )
 
 func main() {
